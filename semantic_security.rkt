@@ -87,7 +87,7 @@
 (attack-game 1 cipher-bitwise adversary-first-bit 10)
 ;; Adversary Advantage: |Pr[W_0] - Pr[W_1]| = 0
 
-;; 2. Identity Cipher against smart adversary -> #hash((#t . 1) (#f . 0)) [Advantage = 1/2]
+;; 2. Identity Cipher against smart adversary -> #hash((#t . 1) (#f . 1)) [Advantage = 1]
 (attack-game 0 cipher-identity adversary-first-bit 10)
 (attack-game 1 cipher-identity adversary-first-bit 10)
 ;; Adversary Advantage: |Pr[W_0] - Pr[W_1]| = 1
