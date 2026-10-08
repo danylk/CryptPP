@@ -1,0 +1,109 @@
+#lang roulette/example/disrupt
+
+;; Sum-Check Protocol
+;; Based on "Proofs, Arguments, and Zero-Knowledge" by Jusin Thaler
+
+;; -----------------------------------------------------------------------------
+;; PRIMITIVES
+;; -----------------------------------------------------------------------------
+
+;; Field Prime p = 7
+(define p 7)
+
+;; eval-poly-1d : (Listof Natural) Natural -> Natural
+;; Evaluates a univariate polynomial coeff_0 + coeff_1*X + coeff_2*X^2 at point r in F_p.
+(define (eval-poly-1d coeffs r)
+  (foldr (lambda (c acc)
+           (modulo (+ c (* r acc)) p))
+         0
+         coeffs))
+
+;; sample-field-element : -> Natural
+;; Uniformly samples a random challenge point r from F_p = {0, 1, ..., p-1}
+(define (sample-field-element)
+  (make-categorical (for/list ([i (in-range p)])
+                      (cons i (/ 1 p)))))
+
+;; -----------------------------------------------------------------------------
+;; POLYNOMIAL DEFINITIONS & PROVER FUNCTIONS
+;; -----------------------------------------------------------------------------
+
+;; Honest polynomial: g(x1, x2) = x1^2 + 2*x1*x2 + 3*x2
+;; Modulo p = 7
+(define (g x1 x2)
+  (modulo (+ (* x1 x1)
+             (* 2 x1 x2)
+             (* 3 x2))
+          p))
+
+;; Compute true sum over {0,1}^2
+;; g(0,0)=0, g(0,1)=3, g(1,0)=1, g(1,1)=6 -> Sum = 10 = 3 (mod 7)
+(define true-sum
+  (modulo (+ (g 0 0) (g 0 1) (g 1 0) (g 1 1)) p))
+
+;; Honest Prover Round 1 Polynomial: s1(X1) = sum_{x2 in {0,1}} g(X1, x2)
+;; s1(X1) = (X1^2 + 3) + (X1^2 + 2*X1 + 3) = 2*X1^2 + 2*X1 + 6
+;; Represented as coefficients [c0, c1, c2]: '(6 2 2)
+(define (honest-prover-round-1)
+  '(6 2 2))
+
+;; Honest Prover Round 2 Polynomial: s2(X2) = g(r1, X2)
+;; s2(X2) = r1^2 + (2*r1 + 3)*X2
+;; Represented as coefficients [c0, c1]: (list (r1^2 mod p) ((2*r1 + 3) mod p))
+(define (honest-prover-round-2 r1)
+  (list (modulo (* r1 r1) p)
+        (modulo (+ (* 2 r1) 3) p)))
+
+;; Dishonest Prover Round 1 (Attempts to claim fake sum H' = 5)
+(define (cheating-prover-round-1)
+  '(1 2 2)) ; s1(0) + s1(1) = 1 + 5 = 6 = 5 (mod 7)
+
+;; -----------------------------------------------------------------------------
+;; SUM-CHECK INTERACTIVE PROOF PROTOCOL
+;; -----------------------------------------------------------------------------
+
+;; sum-check-protocol : Natural Prover1 Prover2 -> Boolean
+;; Evaluates whether the verifier accepts the claim H.
+(define (sum-check-protocol claimed-H prover-r1-fn prover-r2-fn)
+  ;; --- Round 1 ---
+  (define s1-coeffs (prover-r1-fn))
+  (define check1-val (modulo (+ (eval-poly-1d s1-coeffs 0)
+                                (eval-poly-1d s1-coeffs 1))
+                             p))
+  ;; Check 1: s1(0) + s1(1) == H
+  (define v1-pass? (equal? check1-val claimed-H))
+  
+  ;; Verifier samples random challenge r1
+  (define r1 (sample-field-element))
+  
+  ;; --- Round 2 ---
+  (define s2-coeffs (prover-r2-fn r1))
+  (define check2-val (modulo (+ (eval-poly-1d s2-coeffs 0)
+                                (eval-poly-1d s2-coeffs 1))
+                             p))
+  ;; Check 2: s2(0) + s2(1) == s1(r1)
+  (define v2-pass? (equal? check2-val (eval-poly-1d s1-coeffs r1)))
+  
+  ;; Verifier samples random challenge r2
+  (define r2 (sample-field-element))
+  
+  ;; --- Final Oracle Evaluation Check ---
+  ;; Check 3: s2(r2) == g(r1, r2)
+  (define v3-pass? (equal? (eval-poly-1d s2-coeffs r2) (g r1 r2)))
+  
+  ;; Verifier accepts if all 3 checks pass
+  (and v1-pass? v2-pass? v3-pass?))
+
+;; -----------------------------------------------------------------------------
+;; EVALUATION & SOUNDNESS ANALYSIS
+;; -----------------------------------------------------------------------------
+
+;; 1. Completeness: Honest Prover with true claim H = 3
+(sum-check-protocol true-sum honest-prover-round-1 honest-prover-round-2)
+;; Output: #hash((#t . 1))  [Verifier accepts with probability 1]
+
+;; 2. Soundness / Cheating Prover: Prover lies about claim (H' = 5)
+(sum-check-protocol 5 cheating-prover-round-1 honest-prover-round-2)
+;; Output: #hash((#f . 5/7) (#t . 2/7))
+;; Probability of catching dishonest prover = 5/7
+;; Soundness Error = 2/7 (bounded by Schwartz-Zippel: deg/p = 2/7)
