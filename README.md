@@ -7,5 +7,5 @@ CryptPP is a project that uses the probabilistic programming language [Roulette]
 ### [Semantic Security](semantic_security.rkt)
 Semantic Security based on Dan Boneh and Victor Shoup's "A Graduate Course in Applied Cryptography" (2023)
 
-### [Reed Solomon Fingerprint Protocol](reed_solomon_fingerprint.rkt)
-Reed-Solomon Fingerprint Protocol based on Justin Thaler's "Proofs, Arguments, and Zero-Knowledge"
+### [Reed-Solomon Fingerprint Protocol](reed_solomon_fingerprint.rkt)
+Reed-Solomon Fingerprint Protocol based on Justin Thaler's "Proofs, Arguments, and Zero-Knowledge" (2023)
