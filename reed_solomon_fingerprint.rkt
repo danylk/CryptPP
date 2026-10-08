@@ -4,7 +4,7 @@
 ;; Based on "Proofs, Arguments, and Zero-Knowledge" by Jusin Thaler
 
 ;; -----------------------------------------------------------------------------
-;; 1. HELPER FUNCTIONS FOR FINITE FIELD ARITHMETIC (F_p)
+;; PRIMITIVES
 ;; -----------------------------------------------------------------------------
 
 ;; eval-poly : (Listof Natural) Natural Natural -> Natural
@@ -23,7 +23,7 @@
                       (cons i (/ 1 p)))))
 
 ;; -----------------------------------------------------------------------------
-;; 2. REED-SOLOMON FINGERPRINTING INTERACTION
+;; REED-SOLOMON FINGERPRINTING PROTOCOL
 ;; -----------------------------------------------------------------------------
 
 ;; rs-fingerprint-game : (Listof Natural) (Listof Natural) Natural -> Boolean
@@ -41,7 +41,7 @@
   (equal? fp-A fp-B))
 
 ;; -----------------------------------------------------------------------------
-;; 3. VERIFICATION & PROBABILISTIC INFERENCE
+;; VERIFICATION & PROBABILISTIC INFERENCE
 ;; -----------------------------------------------------------------------------
 
 ;; Field prime p = 7
