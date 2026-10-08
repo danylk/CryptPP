@@ -1,6 +1,7 @@
 #lang roulette/example/disrupt
 
 ;; Semantic Security Cryptanalysis
+;; Based on "A Graduate Course in Applied Cryptography" by Dan Boneh and Victor Shoup
 
 ;; -----------------------------------------------------------------------------
 ;; PRIMITIVES
