@@ -114,14 +114,16 @@
   (honest-evaluations v current-degree v-variate-poly list-of-query))
 
 ;; prover* : Prover
-;; Malicious Prover: keeps the honest s(1) and forges
-;; s(0) = expected-val - s(1), so that s(0) + s(1) passes the round check
-;; for a false claim.
+;; Malicious Prover: keeps the honest s(0) and forges s(1) = expected-val - s(0),
+;; so that s(0) + s(1) passes the round check for a false claim.
+;; If deg = 0, s is a constant c with s(0) + s(1) = 2c, so it sends c = expected-val / 2.
 (define (prover* v current-degree v-variate-poly list-of-query expected-val)
   (define honest
     (honest-evaluations v current-degree v-variate-poly list-of-query))
-  (define fake-y0 (mod-sub expected-val (cadr honest)))
-  (cons fake-y0 (cdr honest)))
+  (define y0 (car honest))
+  (if (null? (cdr honest))
+      (list (mod-div expected-val 2))
+      (cons y0 (cons (mod-sub expected-val y0) (cddr honest)))))
 
 
 ;; # VERIFIER
@@ -161,7 +163,7 @@
                          (cdr deg-list))))])))))
 
 
-;; # EVALUATION
+;; # POLYNOMIAL
 
 ;; g : Polynomial
 ;; g(X_1,X_2,X_3) = 2X_1^3 + X_1X_3 + X_2X_3, evaluated modulo p.
@@ -183,6 +185,9 @@
 ;; Samples the three random challenges r_1, r_2, r_3 uniformly from F_p.
 (define (challenges)
   (list (finite-field p) (finite-field p) (finite-field p)))
+
+
+;; # EVALUATION
 
 ;; 1. Honest Prover, true claim H = 1 -> #t with probability 1
 ;;    [Completeness]
