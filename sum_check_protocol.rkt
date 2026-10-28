@@ -18,19 +18,18 @@
 
 ;; A Polynomial is a function (List-of FieldElement) -> FieldElement
 ;; Interpretation: A v-variate polynomial g over F_p, evaluated at a full
-;;                 assignment (x_1, ..., x_v); the verifier has oracle
-;;                 access to it
+;; assignment (x_1, ..., x_v);
+;; the verifier has oracle access to it
 
 ;; A Message is a (List-of FieldElement)
 ;; Interpretation: The evaluations s_j(0), s_j(1), ..., s_j(d_j) of the
-;;                 prover's univariate round-j polynomial; d_j + 1 values
-;;                 fix a polynomial of degree <= d_j
+;; prover's univariate round-j polynomial;
+;; d_j + 1 values fix a polynomial of degree <= d_j
 
 ;; A Prover is a function
 ;;   Natural Natural Polynomial (List-of FieldElement) FieldElement -> Message
-;; Interpretation: Given the number of variables, the current degree bound,
-;;                 g, the challenges so far, and the claim being checked,
-;;                 returns the round message
+;; Interpretation: Given the number of variables, the current degree bound, g,
+;; the challenges so far, and the claim being checked, returns the round message
 
 
 ;; # FIELD ARITHMETIC
@@ -93,10 +92,9 @@
                             #:when (not (= xi xj)))
                    (mod-div (mod-sub x xj) (mod-sub xi xj)))))))))
 
-;; honest-evaluations :
-;;   Natural Natural Polynomial (List-of FieldElement) -> Message
-;; Computes s_j(xi) = sum of g(r_1, ..., r_{j-1}, xi, tail) over all
-;; Boolean tails, for xi = 0, 1, ..., d_j.
+;; honest-evaluations : Natural Natural Polynomial (List-of FieldElement) -> Message
+;; Computes s_j(xi) = sum of g(r_1, ..., r_{j-1}, xi, tail) over all Boolean tails,
+;; for xi = 0, 1, ..., d_j.
 (define (honest-evaluations v current-degree v-variate-poly list-of-query)
   (define remaining-vars (- v (length list-of-query) 1))
   (define boolean-assignments (boolean-hypercube remaining-vars))
@@ -128,39 +126,34 @@
 
 ;; # VERIFIER
 
-;; verifier : Natural (List-of Natural) Polynomial FieldElement
-;;            (List-of Distribution) Prover -> Distribution
+;; verifier : Natural (List-of Natural) Polynomial FieldElement (List-of Distribution) Prover -> Distribution
 ;; Runs the sum-check protocol for the claim H = sum of g over {0,1}^v and
-;; returns the distribution of accept (#t) / reject (#f) over the random
-;; challenges.
+;; returns the distribution of accept (#t) / reject (#f) over the random challenges.
 (define (verifier total-vars degrees g H random-challenges prover-fn)
-  (let loop ([round 1]
-             [expected-val H]
-             [query-list '()]
-             [r-list random-challenges]
-             [deg-list degrees])
+  (verify-rounds total-vars degrees g H random-challenges prover-fn '()))
 
-    (if (> round total-vars)
-        ;; --- FINAL ORACLE CHECK ---
-        (= expected-val (g query-list))
+;; verify-rounds : Natural (List-of Natural) Polynomial FieldElement (List-of Distribution) Prover (List-of FieldElement)
+;;                 -> Distribution
+;; Checks the remaining rounds against the current claim, given the
+;; challenges used so far, and ends with the final oracle check.
+(define (verify-rounds v degrees g claim challenges prover-fn queries)
+  (if (null? degrees)
+      ;; --- FINAL ORACLE CHECK ---
+      (= claim (g queries))
 
-        ;; --- ROUND i ---
-        (let* ([current-deg (car deg-list)]
-               [ys (prover-fn total-vars current-deg g
-                              query-list expected-val)])
-          (cond
-            ;; Degree check: at most d_i + 1 evaluations means deg <= d_i
-            [(> (length ys) (+ current-deg 1)) #f]
-            [else
-             (define s (interpolate ys))
-             (if (not (= (mod-add (s 0) (s 1)) expected-val))
-                 #f
-                 (let ([r (car r-list)])
-                   (loop (add1 round)
-                         (s r)
-                         (append query-list (list r))
-                         (cdr r-list)
-                         (cdr deg-list))))])))))
+      ;; --- ROUND i ---
+      (let* ([deg (car degrees)]
+             [r (car challenges)]
+             [ys (prover-fn v deg g queries claim)]
+             [s (interpolate ys)])
+        (cond
+          ;; Degree check: at most d_i + 1 evaluations means deg <= d_i
+          [(> (length ys) (+ deg 1)) #f]
+          [else
+           (if (not (= (mod-add (s 0) (s 1)) claim))
+               #f
+               (verify-rounds v (cdr degrees) g (s r) (cdr challenges)
+                              prover-fn (append queries (list r))))]))))
 
 
 ;; # POLYNOMIAL
@@ -189,15 +182,14 @@
 
 ;; # EVALUATION
 
+;; [Completeness]
 ;; 1. Honest Prover, true claim H = 1 -> #t with probability 1
-;;    [Completeness]
 (verifier 3 '(3 1 1) g H (challenges) prover)
 
+;; [Soundness]
 ;; 2. Honest Prover, false claim H = 3 -> #f with probability 1
 (verifier 3 '(3 1 1) g 3 (challenges) prover)
 
 ;; 3. Malicious Prover, false claim H = 3 -> #t 531/1331, #f 800/1331
-;;    [Soundness]
 (verifier 3 '(3 1 1) g 3 (challenges) prover*)
-;; Soundness Error: Pr[accept] = 531/1331 ~ 0.399
-;;                  <= (3+1+1)/11 ~ 0.455 <= vd/p = 9/11 ~ 0.818
+;; Soundness Error: Pr[accept] = 531/1331 ~ 0.399 <= (3+1+1)/11 ~ 0.455 <= vd/p = 9/11 ~ 0.818
