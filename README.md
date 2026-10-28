@@ -18,5 +18,5 @@ TODO
 Sum-Check Protocol based on Justin Thaler's "Proofs, Arguments, and Zero-Knowledge" (2023)
 
 ### [Reed-Solomon Fingerprint Protocol](reed_solomon_fingerprint.rkt)
-# TODO: Reed-Solomon Fingerprint Protocol based on Justin Thaler's "Proofs, Arguments, and Zero-Knowledge" (2023)
+TODO: Reed-Solomon Fingerprint Protocol based on Justin Thaler's "Proofs, Arguments, and Zero-Knowledge" (2023)
 
