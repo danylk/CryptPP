@@ -13,7 +13,7 @@ flowchart LR
     hl["High-level<br/>syntax"]
     wbf["Weighted<br/>Boolean formula"]
     bdd["BDD"]
-    res["Result"]
+    res["Inference Result"]
 
     hl -->|"Symbolic<br/>execution"| wbf
     wbf -->|"Knowledge<br/>compilation"| bdd
