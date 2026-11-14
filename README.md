@@ -7,7 +7,8 @@ CryptPP is a project that uses the probabilistic programming language (PPL) to a
 This project is for Programming with Probability (CS 4973), and you can access typed project proposal [here](Sunkwan_Kim___CS_4973_Project_Proposal.pdf).
 
 ## 1. Probabilistic Programming Language
-### [Pipeline](pipeline.rkt)
+### Inference via Weighted Model Counting Pipeline
+#### [Pipeline](pipeline.rkt)
 ```mermaid
 flowchart LR
     hl["High-level<br/>syntax"]
@@ -19,7 +20,6 @@ flowchart LR
     wbf -->|"Knowledge<br/>compilation"| bdd
     bdd -->|"Inference<br/>(WMC)"| res
 ```
-*Inference via Weighted Model Counting Pipeline.*
 
 ## 2. Modeling Cryptographic Schemes
 ### Security Games 
