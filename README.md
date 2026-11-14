@@ -20,6 +20,7 @@ flowchart LR
     wbf -->|"Knowledge<br/>compilation"| bdd
     bdd -->|"Inference<br/>(WMC)"| res
 ```
+[Tests](pipeline-test.rkt) are AI-assisted.
 
 ## 2. Modeling Cryptographic Schemes
 ### Security Games 
