@@ -9,6 +9,7 @@
          knowledge-compilation
          bdd-wmc
          compiler
+         mk-not mk-and mk-or mk-xor
          (struct-out BddNode)
          (struct-out andE)
          (struct-out orE)
@@ -294,6 +295,3 @@
 (define (compiler p)
   (define-values (f w) (symbolic-execution p))
   (bdd-wmc (knowledge-compilation f) w))
-
-(compiler (letE 'x (flipE 1/2)
-                (xorE (varE 'x) (xorE (varE 'x) #f))))

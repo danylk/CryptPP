@@ -38,19 +38,21 @@
 (define (mod-add a b) (modulo (+ a b) p))
 (define (mod-sub a b) (modulo (- a b) p))
 (define (mod-mul a b) (modulo (* a b) p))
+(define (mod-expt base exp)
+  (let loop ([b (modulo base p)] [e exp] [res 1])
+    (cond
+      [(zero? e) res]
+      [(even? e)
+       (loop (modulo (* b b) p) (/ e 2) res)]
+      [else
+       (loop (modulo (* b b) p)
+             (quotient e 2)
+             (modulo (* res b) p))])))
 
 ;; Fermat's Little Theorem for modular inverse
 ;; a^(-1) = a^(p-2) mod p
 (define (mod-inv n)
-  (let loop ([base (modulo n p)] [exp (- p 2)] [res 1])
-    (cond
-      [(zero? exp) res]
-      [(even? exp)
-       (loop (modulo (* base base) p) (/ exp 2) res)]
-      [else
-       (loop (modulo (* base base) p)
-             (quotient exp 2)
-             (modulo (* res base) p))])))
+  (mod-expt n (- p 2)))
 
 (define (mod-div a b) (mod-mul a (mod-inv b)))
 (define (mod-sum lst) (foldl mod-add 0 lst))

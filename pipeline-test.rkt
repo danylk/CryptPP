@@ -1,10 +1,10 @@
 #lang racket
-(require "pipeline.rkt")
+(require cryptppl/pipeline)
 (require rackunit)
 
 ;; # SYMBOLIC EXECUTION
 
-;; se : TinyPPL -> (List Formula (Hash Var Number))
+;; se : CryptPPL -> (List Formula (Hash Var Number))
 ;; Collects both results of symbolic-execution into a list for comparison.
 (define (se e)
   (call-with-values (λ () (symbolic-execution e)) list))
@@ -231,7 +231,7 @@
 (check-equal? (bdd-wmc (kc (andF x z)) (hash 0 1/2 1 1/7 2 1/3)) 1/6)
 
 
-;; # TinyPPL: ONE CONSTRUCT AT A TIME
+;; # CryptPPL: ONE CONSTRUCT AT A TIME
 
 ;; constants
 (check-equal? (compiler #t) 1)
@@ -329,7 +329,7 @@
               2/3)
 
 
-;; # TinyPPL: COMBINED PROGRAMS
+;; # CryptPPL: COMBINED PROGRAMS
 
 ;; Correlation: a coin against itself
 (check-equal? (compiler (letE 'x (flipE 3/7) (orE (varE 'x) (notE (varE 'x))))) 1)
@@ -359,7 +359,7 @@
                                                       (varE 'm)))))))
               1)
 
-;; and-chain : Natural -> TinyPPL
+;; and-chain : Natural -> CryptPPL
 ;; The conjunction of n separate fair coins.
 (define (and-chain n)
   (if (= n 1)
@@ -369,7 +369,7 @@
 ;; Many variables: probability 1/2^40
 (check-equal? (compiler (and-chain 40)) (expt 1/2 40))
 
-;; parity : Natural -> TinyPPL
+;; parity : Natural -> CryptPPL
 ;; Whether an odd number of n coins (each with p = 1/3) come up true.
 ;; Each accumulator is let-bound, so the formula shares it rather than copying it.
 (define (parity n)
@@ -387,7 +387,7 @@
 ;; Scale: 200 chained xors
 (check-equal? (compiler (parity 200)) (/ (- 1 (expt 1/3 200)) 2))
 
-;; if-chain : Natural -> TinyPPL
+;; if-chain : Natural -> CryptPPL
 ;; n nested ifs, each choosing between the previous result and a fresh coin.
 ;; The shared condition formulas make this a DAG, like parity.
 (define (if-chain n)
@@ -403,9 +403,9 @@
 (check-equal? (compiler (if-chain 100)) 1/3)
 
 
-;; # TinyPPL: EXHAUSTIVE AND RANDOM TESTING AGAINST A REFERENCE
+;; # CryptPPL: EXHAUSTIVE AND RANDOM TESTING AGAINST A REFERENCE
 
-;; reference : TinyPPL -> Number
+;; reference : CryptPPL -> Number
 ;; Computes the probability of #t by enumerating outcomes directly,
 ;; without symbolic execution, BDDs, or model counting.
 ;; Unlike symbolic-execution, ifE runs only the branch that is taken.
@@ -414,7 +414,7 @@
   (define (merge os)
     (list (cons #t (for/sum ([o os] #:when (car o)) (cdr o)))
           (cons #f (for/sum ([o os] #:unless (car o)) (cdr o)))))
-  ;; outcomes : TinyPPL (Hash Symbol Boolean) -> Outcomes
+  ;; outcomes : CryptPPL (Hash Symbol Boolean) -> Outcomes
   (define (outcomes e env)
     (match e
       [#t (list (cons #t 1) (cons #f 0))]
@@ -453,7 +453,7 @@
 
 (define names '(x y))
 
-;; all-programs : Natural (Listof Symbol) (Listof (U Number Boolean)) -> (Listof TinyPPL)
+;; all-programs : Natural (Listof Symbol) (Listof (U Number Boolean)) -> (Listof CryptPPL)
 ;; Every program of depth at most d whose variables are all in scope.
 ;; Each atom is a flip probability, or a Boolean used as a constant.
 ;; ifE takes its three parts from the leaves only, since all combinations
@@ -512,7 +512,7 @@
 ;; pick : (Listof X) -> X
 (define (pick xs) (list-ref xs (random (length xs))))
 
-;; random-program : Natural (Listof Symbol) -> TinyPPL
+;; random-program : Natural (Listof Symbol) -> CryptPPL
 ;; A random program of depth at most d whose variables are all in scope.
 (define (random-program d scope)
   (define (leaf)
